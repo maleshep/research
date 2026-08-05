@@ -73,12 +73,34 @@ to `data/posts.json`), categorizes posts by keyword rules, and emits
 pwsh scripts/launch-research.ps1
 
 # 2. Load all posts in the browser, take snapshot (manual via MCP or chrome-research tools)
+#    In chrome-research, take_snapshot → data/snapshot.txt
+#    To load all posts: evaluate_script with a "Show more results" click loop.
+#    IMPORTANT: cap the loop at ~15 iterations per call — DevTools protocol
+#    times out around 120s. Verify with a follow-up call that checks
+#    buttonStillThere and postCount.
 
 # 3. From the repo root:
 node scripts/parse-snapshot.mjs
 node scripts/scrape-github-comments.mjs   # ~10 min for ~80 candidates
 python build_readme.py
 ```
+
+## Recovery after Windows reimage
+
+If `chrome-research` can't connect or shows a LinkedIn login page despite
+previously working, the Slot4 user-data-dir at
+`C:\Users\M316235\AppData\Local\Google\Chrome\Slot4` may have been wiped.
+Symptoms on 2026-08-05 (post-reimage): DevTools port responds, but LinkedIn
+redirects to `/login`. Fix: re-run `scripts/launch-research.ps1` (creates a
+fresh Slot4 profile), sign into LinkedIn manually, then proceed with the
+pipeline. See SETUP-CHROME.md for the one-time setup checklist.
+
+## Insights
+
+After a sync, run the analysis in `INSIGHTS.md` (top authors, vibe-shift
+keyword comparison between recent ≤1mo and older posts, recency distribution,
+delta vs prior sync). Regenerate by re-running the keyword analysis against
+the fresh `data/posts-github.json`.
 
 ## Files in this repo
 
