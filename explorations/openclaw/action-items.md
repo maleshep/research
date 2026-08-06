@@ -21,5 +21,5 @@
 
 - [ ] Make gateway always-on (Windows service or scheduled task) — currently dies on logout/reboot
 - [ ] Boot an embedding model on HPC and re-enable `memory_search` for semantic recall
-- [ ] Add `plugins.allow: ["whatsapp"]` to silence the auto-load warning
+- [x] Add `plugins.allow: ["whatsapp", "memory-core"]` to minimize plugin load (saves ~70 MB, down from 9 plugins to 2)
 - [ ] Persist `gateway.auth.token` in config so the runtime token doesn't change on every restart

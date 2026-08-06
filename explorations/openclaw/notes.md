@@ -43,7 +43,13 @@
 
 ### Resource usage (passive)
 - Disk: 81 MB total in `~/.openclaw/` (extensions 61M, credentials 16M with WhatsApp session + app-state-sync keys, state 3M SQLite). Grows slowly with conversations.
-- RAM: ~450 MB working set when idle.
+- RAM: ~366 MB steady-state with `plugins.allow: ["whatsapp", "memory-core"]` (down from ~437 MB with default 9-plugin load). The remaining 366 MB is the irreducible floor — Node.js V8 heap + baileys + WhatsApp WebSocket + SQLite + openclaw core runtime. Spike to ~800 MB during active message processing, GC drops it back to ~365 MB within 30s of idle.
+
+### Plugin minimization (2026-08-06)
+- Default load: 9 plugins (browser, canvas, device-pair, file-transfer, memory-core, ollama, phone-control, talk-voice, whatsapp) = ~437 MB.
+- Set `plugins.allow: ["whatsapp", "memory-core"]` = ~366 MB (~16% reduction, 7 plugins disabled).
+- The `openai-completions` adapter is built into openclaw core — does NOT need the `openai` plugin. (Research suggested it did; verified by direct test — agent works without `openai` plugin loaded.)
+- Crash-loop breaker trips after 3 unclean restarts within 5 min — if you're iterating on config, wait 5 min between restarts or use `openclaw channels start --channel whatsapp` to manually restart just the channel.
 
 ### Running the gateway
 - Gateway runs as a background process on the workstation, listening on `127.0.0.1:18789`.
