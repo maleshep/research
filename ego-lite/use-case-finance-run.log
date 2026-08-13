@@ -1,0 +1,29 @@
+[0ms] AAPL navigating: https://finance.yahoo.com/quote/AAPL/
+[6752ms] AAPL quote header ready: true
+[6800ms] AAPL extracted: {"price":"306.80","dailyChange":"-6.26","dailyChangePct":"-2.00","oneMonthReturnPct":"-2.70","marketCap":"4.477T","url":"https://finance.yahoo.com/quote/AAPL/","title":"Apple Inc. (AAPL) Stock Price, News, Quote & History - Yahoo Finance"}
+[6800ms] MSFT navigating: https://finance.yahoo.com/quote/MSFT/
+[46193ms] MSFT quote header ready: true
+[56502ms] MSFT extracted: {"price":"506.05","dailyChange":"+6.06","dailyChangePct":"+1.21","oneMonthReturnPct":"31.41","marketCap":"3.758T","url":"https://finance.yahoo.com/quote/MSFT/","title":"Microsoft Corporation (MSFT) Stock Price, News, Quote & History - Yahoo Finance"}
+[56502ms] GOOGL navigating: https://finance.yahoo.com/quote/GOOGL/
+[74099ms] GOOGL error: Error: CDP request timed out: Page.navigate
+[74099ms] AMZN navigating: https://finance.yahoo.com/quote/AMZN/
+[109339ms] AMZN error: Error: CDP request timed out: Page.navigate
+[109339ms] TSLA navigating: https://finance.yahoo.com/quote/TSLA/
+[150124ms] TSLA error: Error: CDP request timed out: Page.navigate
+
+=== USE CASE: STOCKS IN ONE PASS — RESULT ===
+pass: partial
+stocks_loaded: 2/5
+duration_ms: 150125
+
+--- EXTRACTED DATA ---
+AAPL: price=306.80, dailyChangePct=-2, marketCap=4.477T (4477000000000), 1moReturnPct=-2.7
+MSFT: price=506.05, dailyChangePct=1.21, marketCap=3.758T (3758000000000), 1moReturnPct=31.41
+GOOGL: price=undefined, dailyChangePct=null, marketCap=undefined (null), 1moReturnPct=null
+AMZN: price=undefined, dailyChangePct=null, marketCap=undefined (null), 1moReturnPct=null
+TSLA: price=undefined, dailyChangePct=null, marketCap=undefined (null), 1moReturnPct=null
+
+--- CALCULATIONS ---
+biggest_gainer: MSFT (1.21%)
+biggest_loser: AAPL (-2%)
+market_cap_weighted_daily_change_pct: -0.5351

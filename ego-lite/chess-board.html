@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local Chess Board</title>
+<style>
+  body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #1a1a1a; color: #fff; font-family: monospace; }
+  #status { margin: 10px; font-size: 16px; }
+  #board { border: 4px solid #555; cursor: pointer; }
+  #history { margin-top: 10px; max-width: 480px; text-align: center; font-size: 13px; opacity: 0.8; }
+</style>
+</head>
+<body>
+<div id="status">White to move</div>
+<canvas id="board" width="480" height="480"></canvas>
+<div id="history"></div>
+<script>
+// Minimal chess: legal-ish move validation, canvas rendering, click-to-move.
+// White starts at bottom. Pieces are unicode chess symbols.
+
+const SQ = 60; // square size
+const PIECES = {
+  K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙',
+  k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟'
+};
+
+// Standard starting position (uppercase = white, lowercase = black)
+let board = [
+  ['r','n','b','q','k','b','n','r'],
+  ['p','p','p','p','p','p','p','p'],
+  ['','','','','','','',''],
+  ['','','','','','','',''],
+  ['','','','','','','',''],
+  ['','','','','','','',''],
+  ['P','P','P','P','P','P','P','P'],
+  ['R','N','B','Q','K','B','N','R']
+];
+
+let turn = 'white';
+let selected = null; // {r, c}
+let moveHistory = [];
+let lastMove = null; // {from: {r,c}, to: {r,c}}
+
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
+const historyEl = document.getElementById('history');
+
+function isWhite(p) { return p && p === p.toUpperCase(); }
+
+function inBounds(r, c) { return r >= 0 && r < 8 && c >= 0 && c < 8; }
+
+function legalMoves(r, c) {
+  const piece = board[r][c];
+  if (!piece) return [];
+  const white = isWhite(piece);
+  const moves = [];
+  const type = piece.toLowerCase();
+  const dir = white ? -1 : 1;
+
+  function add(nr, nc) {
+    if (!inBounds(nr, nc)) return false;
+    const target = board[nr][nc];
+    if (target && isWhite(target) === white) return false;
+    moves.push({ r: nr, c: nc });
+    return !target;
+  }
+
+  if (type === 'p') {
+    if (add(r + dir, c)) {
+      const startRow = white ? 6 : 1;
+      if (r === startRow) add(r + dir * 2, c);
+    }
+    for (const dc of [-1, 1]) {
+      const nr = r + dir, nc = c + dc;
+      if (inBounds(nr, nc) && board[nr][nc] && isWhite(board[nr][nc]) !== white) {
+        moves.push({ r: nr, c: nc });
+      }
+    }
+  } else if (type === 'n') {
+    for (const [dr, dc] of [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]) {
+      add(r + dr, c + dc);
+    }
+  } else if (type === 'b' || type === 'q') {
+    for (const [dr, dc] of [[-1,-1],[-1,1],[1,-1],[1,1]]) {
+      for (let i = 1; i < 8; i++) { if (!add(r + dr*i, c + dc*i)) break; }
+    }
+  }
+  if (type === 'r' || type === 'q') {
+    for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+      for (let i = 1; i < 8; i++) { if (!add(r + dr*i, c + dc*i)) break; }
+    }
+  }
+  if (type === 'k') {
+    for (const [dr, dc] of [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]) {
+      add(r + dr, c + dc);
+    }
+  }
+  return moves;
+}
+
+function render() {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const light = (r + c) % 2 === 0;
+      ctx.fillStyle = light ? '#f0d9b5' : '#b58863';
+      ctx.fillRect(c * SQ, r * SQ, SQ, SQ);
+
+      // Highlight selected
+      if (selected && selected.r === r && selected.c === c) {
+        ctx.fillStyle = 'rgba(255, 255, 0, 0.4)';
+        ctx.fillRect(c * SQ, r * SQ, SQ, SQ);
+      }
+      // Highlight last move
+      if (lastMove && ((lastMove.from.r === r && lastMove.from.c === c) || (lastMove.to.r === r && lastMove.to.c === c))) {
+        ctx.fillStyle = 'rgba(255, 165, 0, 0.3)';
+        ctx.fillRect(c * SQ, r * SQ, SQ, SQ);
+      }
+      // Highlight legal moves
+      if (selected) {
+        const lm = legalMoves(selected.r, selected.c);
+        for (const m of lm) {
+          if (m.r === r && m.c === c) {
+            ctx.fillStyle = board[r][c] ? 'rgba(255, 0, 0, 0.4)' : 'rgba(0, 255, 0, 0.3)';
+            ctx.beginPath();
+            ctx.arc(c * SQ + SQ/2, r * SQ + SQ/2, board[r][c] ? 28 : 8, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+        }
+      }
+
+      const piece = board[r][c];
+      if (piece) {
+        ctx.font = '40px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = isWhite(piece) ? '#fff' : '#000';
+        ctx.fillText(PIECES[piece], c * SQ + SQ/2, r * SQ + SQ/2);
+      }
+    }
+  }
+  // Rank/file labels
+  ctx.font = '12px monospace';
+  ctx.fillStyle = '#888';
+  for (let i = 0; i < 8; i++) {
+    ctx.fillText(8 - i, 6, i * SQ + 18);
+    ctx.fillText(String.fromCharCode(97 + i), i * SQ + 6, 8 * SQ - 6);
+  }
+}
+
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const c = Math.floor(x / SQ);
+  const r = Math.floor(y / SQ);
+  if (!inBounds(r, c)) return;
+
+  if (selected) {
+    const moves = legalMoves(selected.r, selected.c);
+    const move = moves.find(m => m.r === r && m.c === c);
+    if (move) {
+      // Make the move
+      board[r][c] = board[selected.r][selected.c];
+      board[selected.r][selected.c] = '';
+      lastMove = { from: selected, to: { r, c } };
+      const pieceNotation = board[r][c].toLowerCase() === 'p' ? '' : board[r][c].toUpperCase();
+      moveHistory.push(`${pieceNotation}${String.fromCharCode(97 + selected.c)}${8 - selected.r}-${String.fromCharCode(97 + c)}${8 - r}`);
+      historyEl.textContent = moveHistory.join(' ');
+      turn = turn === 'white' ? 'black' : 'white';
+      statusEl.textContent = `${turn} to move`;
+      selected = null;
+    } else if (board[r][c] && ((turn === 'white' && isWhite(board[r][c])) || (turn === 'black' && !isWhite(board[r][c])))) {
+      selected = { r, c };
+    } else {
+      selected = null;
+    }
+  } else {
+    if (board[r][c] && ((turn === 'white' && isWhite(board[r][c])) || (turn === 'black' && !isWhite(board[r][c])))) {
+      selected = { r, c };
+    }
+  }
+  render();
+});
+
+// Expose for CDP automation
+window.chessAPI = {
+  getBoard: () => board.map(row => row.slice()),
+  getTurn: () => turn,
+  getHistory: () => moveHistory.slice(),
+  move: (fromR, fromC, toR, toC) => {
+    const moves = legalMoves(fromR, fromC);
+    const move = moves.find(m => m.r === toR && m.c === toC);
+    if (!move) return { ok: false, error: 'illegal move' };
+    selected = { r: fromR, c: fromC };
+    board[toR][toC] = board[fromR][fromC];
+    board[fromR][fromC] = '';
+    lastMove = { from: selected, to: { r: toR, c: toC } };
+    const pieceNotation = board[toR][toC].toLowerCase() === 'p' ? '' : board[toR][toC].toUpperCase();
+    moveHistory.push(`${pieceNotation}${String.fromCharCode(97 + fromC)}${8 - fromR}-${String.fromCharCode(97 + toC)}${8 - toR}`);
+    historyEl.textContent = moveHistory.join(' ');
+    turn = turn === 'white' ? 'black' : 'white';
+    statusEl.textContent = `${turn} to move`;
+    selected = null;
+    render();
+    return { ok: true, turn, history: moveHistory };
+  },
+  reset: () => {
+    board = [
+      ['r','n','b','q','k','b','n','r'],
+      ['p','p','p','p','p','p','p','p'],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['','','','','','','',''],
+      ['P','P','P','P','P','P','P','P'],
+      ['R','N','B','Q','K','B','N','R']
+    ];
+    turn = 'white';
+    selected = null;
+    moveHistory = [];
+    lastMove = null;
+    statusEl.textContent = 'White to move';
+    historyEl.textContent = '';
+    render();
+  }
+};
+
+render();
+</script>
+</body>
+</html>

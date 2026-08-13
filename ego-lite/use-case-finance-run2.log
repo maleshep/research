@@ -1,0 +1,32 @@
+[1ms] AAPL navigating: https://finance.yahoo.com/quote/AAPL/
+[35562ms] AAPL goto commit error: Error: CDP request timed out: Page.navigate
+[50578ms] AAPL error: Error: Runtime.evaluate timed out; expression: (() => {\n      const sec = document.querySelector('section[data-testid="quote-price"]');\n      if (!sec) return false;\n      const t = sec.textContent || ...
+[50578ms] MSFT navigating: https://finance.yahoo.com/quote/MSFT/
+[86138ms] MSFT goto commit error: Error: CDP request timed out: Page.navigate
+[101146ms] MSFT error: Error: Runtime.evaluate timed out; expression: (() => {\n      const sec = document.querySelector('section[data-testid="quote-price"]');\n      if (!sec) return false;\n      const t = sec.textContent || ...
+[101146ms] GOOGL navigating: https://finance.yahoo.com/quote/GOOGL/
+[136451ms] GOOGL goto commit error: Error: CDP request timed out: Page.navigate
+[151462ms] GOOGL error: Error: Runtime.evaluate timed out; expression: (() => {\n      const sec = document.querySelector('section[data-testid="quote-price"]');\n      if (!sec) return false;\n      const t = sec.textContent || ...
+[151462ms] AMZN navigating: https://finance.yahoo.com/quote/AMZN/
+[186779ms] AMZN goto commit error: Error: CDP request timed out: Page.navigate
+[201788ms] AMZN error: Error: Runtime.evaluate timed out; expression: (() => {\n      const sec = document.querySelector('section[data-testid="quote-price"]');\n      if (!sec) return false;\n      const t = sec.textContent || ...
+[201788ms] TSLA navigating: https://finance.yahoo.com/quote/TSLA/
+[236884ms] TSLA goto commit error: Error: CDP request timed out: Page.navigate
+[251905ms] TSLA error: Error: Runtime.evaluate timed out; expression: (() => {\n      const sec = document.querySelector('section[data-testid="quote-price"]');\n      if (!sec) return false;\n      const t = sec.textContent || ...
+
+=== USE CASE: STOCKS IN ONE PASS — RESULT ===
+pass: partial
+stocks_loaded: 0/5
+duration_ms: 251906
+
+--- EXTRACTED DATA ---
+AAPL: price=undefined, dailyChangePct=null, marketCap=undefined (null), 1moReturnPct=null
+MSFT: price=undefined, dailyChangePct=null, marketCap=undefined (null), 1moReturnPct=null
+GOOGL: price=undefined, dailyChangePct=null, marketCap=undefined (null), 1moReturnPct=null
+AMZN: price=undefined, dailyChangePct=null, marketCap=undefined (null), 1moReturnPct=null
+TSLA: price=undefined, dailyChangePct=null, marketCap=undefined (null), 1moReturnPct=null
+
+--- CALCULATIONS ---
+biggest_gainer: n/a
+biggest_loser: n/a
+market_cap_weighted_daily_change_pct: n/a
